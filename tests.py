@@ -1,11 +1,11 @@
-"""Tests for the gittimewarp program.""" 
+"""Tests for the gittimewarp program."""
 
 import shutil
-from subprocess import Popen, PIPE
-import sys
 import os
 import tempfile
 import unittest
+
+import gittimewarp
 
 
 class TestInitGitRepo(unittest.TestCase):
@@ -18,17 +18,21 @@ class TestInitGitRepo(unittest.TestCase):
         shutil.rmtree(self.tempdir)
 
     def test_create_repo(self):
-        try:
-            os.mkdir(self.tempdir)
-        except FileExistsError:
-            pass
+        gittimewarp.create_git_repo(self.tempdir, 'testrepo')
+        repo = os.path.join(self.tempdir, 'testrepo')
+        self.assertTrue(os.path.exists(repo))
 
-        command = ['/usr/bin/git', 'init', 'testrepo']
-        process = Popen(command, cwd=self.tempdir, stdout=PIPE, stderr=PIPE)
 
-        result, error = process.communicate()
+class TestWarpGitRepo(unittest.TestCase):
+    """Can warp the time of all commits in a repo to midnight."""
 
-        # Repo created, and no errors
-        success = result.decode().startswith('Initialized empty Git repo')
-        self.assertTrue(success)
-        self.assertFalse(error)
+    def setUp(self):
+        self.tempdir = tempfile.mkdtemp()
+        gittimewarp.create_git_repo(self.tempdir, 'testrepo')
+        self.repo = os.path.join(self.tempdir, 'testrepo')
+
+    def tearDown(self):
+        shutil.rmtree(self.tempdir)
+
+    def test_warp(self):
+        pass

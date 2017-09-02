@@ -1,9 +1,34 @@
 """Command-line tool to modify Git repo timestamps in bulk."""
 
 import os
-import sys
+from subprocess import Popen, PIPE
 
 import click
+
+
+class GitError(Exception):
+    pass
+
+
+def create_git_repo(folder: str, name: str):
+    """Create a git repo at folder with name.
+    Raise a GitError if the repo cannot be created.
+    """
+    try:
+        os.mkdir(folder)
+    except FileExistsError:
+        pass
+
+    command = ['/usr/bin/git', 'init', name]
+    process = Popen(command, cwd=folder, stdout=PIPE, stderr=PIPE)
+
+    result, error = process.communicate()
+
+    if not result.decode().startswith('Initialized empty Git repo'):
+        raise GitError(f'Bad result: {result}')
+
+    if error:
+        raise GitError(error)
 
 
 @click.command()
