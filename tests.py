@@ -8,31 +8,39 @@ import unittest
 import gittimewarp
 
 
-class TestInitGitRepo(unittest.TestCase):
-    """Can initialize a git repo for testing."""
+class TempdirTestCase(unittest.TestCase):
+    """A TestCase with a tempdir that deletes afterward."""
 
     def setUp(self):
         self.tempdir = tempfile.mkdtemp()
 
     def tearDown(self):
         shutil.rmtree(self.tempdir)
+
+
+class TestInitGitRepo(TempdirTestCase):
+    """Can initialize a git repo for testing."""
 
     def test_create_repo(self):
         gittimewarp.create_git_repo(self.tempdir, 'testrepo')
         repo = os.path.join(self.tempdir, 'testrepo')
         self.assertTrue(os.path.exists(repo))
 
+    def test_dummy_commit(self):
+        gittimewarp.create_git_repo(self.tempdir, 'testrepo')
+        repo = os.path.join(self.tempdir, 'testrepo')
+        gittimewarp.create_dummy_commit(repo)
 
-class TestWarpGitRepo(unittest.TestCase):
+
+class TestWarpGitRepo(TempdirTestCase):
     """Can warp the time of all commits in a repo to midnight."""
 
     def setUp(self):
-        self.tempdir = tempfile.mkdtemp()
+        super().setUp()
         gittimewarp.create_git_repo(self.tempdir, 'testrepo')
         self.repo = os.path.join(self.tempdir, 'testrepo')
-
-    def tearDown(self):
-        shutil.rmtree(self.tempdir)
+        # for _ in range(5):
+        gittimewarp.create_dummy_commit(self.repo)
 
     def test_warp(self):
         pass

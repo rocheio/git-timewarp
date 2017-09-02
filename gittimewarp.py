@@ -10,25 +10,60 @@ class GitError(Exception):
     pass
 
 
+def git_command(parts: list, folder: str):
+    """Run a git command in a directory.
+    Raise a GitError if this fails.
+    Return the result as a decoded string if it succeeds.
+    """
+    command = ['/usr/bin/git'] + parts
+    process = Popen(command, cwd=folder, stdout=PIPE, stderr=PIPE)
+
+    result, error = process.communicate()
+    if error:
+        raise GitError(error.decode())
+
+    return result.decode()
+
+
 def create_git_repo(folder: str, name: str):
     """Create a git repo at folder with name.
-    Raise a GitError if the repo cannot be created.
+    Raise a GitError if this fails.
     """
     try:
         os.mkdir(folder)
     except FileExistsError:
         pass
 
-    command = ['/usr/bin/git', 'init', name]
-    process = Popen(command, cwd=folder, stdout=PIPE, stderr=PIPE)
+    result = git_command(['init', name], folder=folder)
 
-    result, error = process.communicate()
-
-    if not result.decode().startswith('Initialized empty Git repo'):
+    if not result.startswith('Initialized empty Git repo'):
         raise GitError(f'Bad result: {result}')
 
-    if error:
-        raise GitError(error)
+
+def number_git_commits(repo: str):
+    """Return number of commits in a Git repo."""
+    try:
+        count = git_command('rev-list --all --count .'.split(), repo)
+    except GitError:
+        return 0
+    else:
+        return int(count.strip())
+
+
+def create_dummy_commit(repo: str):
+    """Create a commit at current time in a Git repo.
+    Raise a GitError if this fails.
+    """
+    count_commits = number_git_commits(repo)
+
+    dummy = os.path.join(repo, 'dummy.txt')
+    with open(dummy, 'w') as stream:
+        stream.write(' ')
+    git_command(['add', 'dummy.txt'], folder=repo)
+    git_command(['commit', '-m', 'dummy commit'], folder=repo)
+
+    new_count_commits = number_git_commits(repo)
+    assert new_count_commits - count_commits == 1
 
 
 @click.command()
