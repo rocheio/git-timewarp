@@ -18,8 +18,8 @@ class TempdirTestCase(unittest.TestCase):
         shutil.rmtree(self.tempdir)
 
 
-class TestInitGitRepo(TempdirTestCase):
-    """Can initialize a git repo for testing."""
+class TestCreateGitRepo(TempdirTestCase):
+    """Can create a git repo with dummy commits for testing."""
 
     def test_create_repo(self):
         gittimewarp.create_git_repo(self.tempdir, 'testrepo')
@@ -27,20 +27,28 @@ class TestInitGitRepo(TempdirTestCase):
         self.assertTrue(os.path.exists(repo))
 
     def test_dummy_commit(self):
+        """Test creation of dummy commits.
+        Also test ability to get number of and list of commits.
+        """
         gittimewarp.create_git_repo(self.tempdir, 'testrepo')
         repo = os.path.join(self.tempdir, 'testrepo')
-        gittimewarp.create_dummy_commit(repo)
+
+        for _ in range(3):
+            gittimewarp.create_dummy_commit(repo)
+
+        self.assertEqual(gittimewarp.number_git_commits(repo), 3)
+        self.assertEqual(len(gittimewarp.all_commits(repo)), 3)
 
 
-class TestWarpGitRepo(TempdirTestCase):
-    """Can warp the time of all commits in a repo to midnight."""
+class TestAlterCommitTime(TempdirTestCase):
+    """Can alter the time of a commit in a Git repo."""
 
     def setUp(self):
         super().setUp()
         gittimewarp.create_git_repo(self.tempdir, 'testrepo')
         self.repo = os.path.join(self.tempdir, 'testrepo')
-        # for _ in range(5):
         gittimewarp.create_dummy_commit(self.repo)
 
-    def test_warp(self):
+    def test_warp_midnight(self):
+        """Ensure commits can be warped to all midnight."""
         pass

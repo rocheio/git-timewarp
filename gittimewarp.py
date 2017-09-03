@@ -2,6 +2,7 @@
 
 import os
 from subprocess import Popen, PIPE
+from typing import List
 
 import click
 
@@ -57,13 +58,29 @@ def create_dummy_commit(repo: str):
     count_commits = number_git_commits(repo)
 
     dummy = os.path.join(repo, 'dummy.txt')
-    with open(dummy, 'w') as stream:
+    with open(dummy, 'a') as stream:
         stream.write(' ')
     git_command(['add', 'dummy.txt'], folder=repo)
     git_command(['commit', '-m', 'dummy commit'], folder=repo)
 
     new_count_commits = number_git_commits(repo)
     assert new_count_commits - count_commits == 1
+
+
+def all_commits(repo: str) -> List[str]:
+    """Return list of all commit hashes in chronological order.
+    Raise a GitError if this fails.
+    """
+    results = git_command(['log', '--pretty=format:%h'], folder=repo)
+    commits = results.strip().split('\n')
+    return commits
+
+
+def alter_commit_time(repo: str, commit: str, hour=0):
+    """Alter the time of a commit in a repo.
+    'hour' must be an integer from 0 to 23 (for now).
+    """
+    pass
 
 
 @click.command()
