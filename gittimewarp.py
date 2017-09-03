@@ -1,5 +1,6 @@
 """Command-line tool to modify Git repo timestamps in bulk."""
 
+from datetime import datetime
 import os
 from subprocess import Popen, PIPE
 from typing import List
@@ -76,11 +77,21 @@ def all_commits(repo: str) -> List[str]:
     return commits
 
 
-def alter_commit_time(repo: str, commit: str, hour=0):
-    """Alter the time of a commit in a repo.
-    'hour' must be an integer from 0 to 23 (for now).
+def get_commit_date(repo: str, commit: str) -> str:
+    """Return string format (for now) of a git commit timestamp."""
+    result = git_command(['show', '-s', '--format=%ci', commit], folder=repo)
+    return result.strip()
+
+
+def altered_commit_datetime(commit_date: str, hour=0, minute=0, second=0) -> str:
+    """Return string for adjusted commit datetime for use with alter command.
+    commit_date argument has format from  `git show --format=%ci`.
+    String returned has format for `git filter-branch export`.
     """
-    pass
+    date, time, timezone = commit_date.split()
+    parsed = datetime.strptime(date + ' ' + time, '%Y-%m-%d %H:%M:%S')
+    parsed = parsed.replace(hour=hour, minute=minute, second=second)
+    return parsed.strftime('%a %b %-d %H:%M:%S %Y') + ' ' + timezone
 
 
 @click.command()
