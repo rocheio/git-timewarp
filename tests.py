@@ -48,12 +48,18 @@ class TestAlterCommitTime(TempdirTestCase):
         gittimewarp.create_git_repo(self.tempdir, 'testrepo')
         self.repo = os.path.join(self.tempdir, 'testrepo')
         gittimewarp.create_dummy_commit(self.repo)
+        self.commits = gittimewarp.all_commits(self.repo)
 
     def test_altered_datetime(self):
         """Ensure commits can be warped to all midnight."""
-        for commit in gittimewarp.all_commits(self.repo):
-            original = gittimewarp.get_commit_date(self.repo, commit)
-            newdate = gittimewarp.altered_commit_datetime(original)
+        original = gittimewarp.get_commit_date(self.repo, self.commits[0])
+        newdate = gittimewarp.altered_commit_datetime(original)
+        self.assertNotIn('00:00:00', original)
+        self.assertIn('00:00:00', newdate)
 
-            self.assertNotIn('00:00:00', original)
-            self.assertIn('00:00:00', newdate)
+    def test_warp_repo(self):
+        """Can warp an entire repo so times are set to midnight."""
+        commit = self.commits[0]
+        original = gittimewarp.get_commit_date(self.repo, commit)
+        newdate = gittimewarp.altered_commit_datetime(original)
+        gittimewarp.set_commit_date(self.repo, commit, newdate)

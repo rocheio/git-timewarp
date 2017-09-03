@@ -72,7 +72,7 @@ def all_commits(repo: str) -> List[str]:
     """Return list of all commit hashes in chronological order.
     Raise a GitError if this fails.
     """
-    results = git_command(['log', '--pretty=format:%h'], folder=repo)
+    results = git_command(['log', '--pretty=format:%H'], folder=repo)
     commits = results.strip().split('\n')
     return commits
 
@@ -83,6 +83,21 @@ def get_commit_date(repo: str, commit: str) -> str:
     return result.strip()
 
 
+def set_commit_date(repo: str, commit: str, new_date: str):
+    """Convert the auther and commit dates of a commit in a repo."""
+    command = [
+        'filter-branch', '--env-filter',
+        f"""
+        if [ $GIT_COMMIT = {commit} ];
+        then
+            export GIT_AUTHOR_DATE="{new_date}";
+            export GIT_COMMITTER_DATE="{new_date}";
+        fi
+        """.strip()
+    ]
+    result = git_command(command, repo)
+
+
 def altered_commit_datetime(commit_date: str, hour=0, minute=0, second=0) -> str:
     """Return string for adjusted commit datetime for use with alter command.
     commit_date argument has format from  `git show --format=%ci`.
@@ -91,7 +106,7 @@ def altered_commit_datetime(commit_date: str, hour=0, minute=0, second=0) -> str
     date, time, timezone = commit_date.split()
     parsed = datetime.strptime(date + ' ' + time, '%Y-%m-%d %H:%M:%S')
     parsed = parsed.replace(hour=hour, minute=minute, second=second)
-    return parsed.strftime('%a %b %-d %H:%M:%S %Y') + ' ' + timezone
+    return parsed.strftime('%a, %d %b %Y %H:%M:%S') + ' ' + timezone
 
 
 @click.command()
