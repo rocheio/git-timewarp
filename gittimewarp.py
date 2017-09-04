@@ -96,6 +96,7 @@ def set_commit_date(repo: str, commit: str, new_date: str):
         """.strip()
     ]
     result = git_command(command, repo)
+    assert result.strip().endswith('was rewritten')
 
 
 def altered_commit_datetime(commit_date: str, hour=0, minute=0, second=0) -> str:
