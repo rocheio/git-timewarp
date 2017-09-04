@@ -13,6 +13,10 @@ class GitError(Exception):
     pass
 
 
+class InvalidTimeFormat(Exception):
+    pass
+
+
 def git_command(parts: list, folder: str):
     """Run a git command in a directory.
     Raise a GitError if this fails.
@@ -111,7 +115,14 @@ def altered_commit_datetime(commit_date: str, hour=0, minute=0, second=0) -> str
     return parsed.strftime('%a, %d %b %Y %H:%M:%S') + ' ' + timezone
 
 
-def warp_all(repo: str, start: int = 17, end: int = 23):
+def randomize_repo_times(repo: str, start=0, end=23):
+    """Randomize all commit times in a repo between hour boundaries."""
+    if not 0 <= start <= 23 or not isinstance(start, int):
+        raise InvalidTimeFormat('start must be an integer between 0 and 23')
+
+    if not 0 <= end <= 23 or not isinstance(end, int):
+        raise InvalidTimeFormat('end must be an integer between 0 and 23')
+
     for commit in all_commits(repo):
         current_date = get_commit_date(repo, commit)
         hour = random.randint(start, end)
@@ -129,7 +140,7 @@ def warp_all(repo: str, start: int = 17, end: int = 23):
 def warp(repo: str, start: int, end: int):
     """Warp the time of all commits in a git repo."""
     click.echo(f'Warping... {repo} from {start} to {end}!')
-    warp_all(repo, start, end)
+    randomize_repo_times(repo, start, end)
 
 
 if __name__ == '__main__':

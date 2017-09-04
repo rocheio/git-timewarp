@@ -2,12 +2,24 @@
 
 A command-line tool to modify commit timestamps in bulk.
 
-## Major Features
+## Major Features (work in progress)
 
 ```
 git-timewarp --help
-git-timewarp -randomize ./my-repo --start 17 --end 24
+git-timewarp ./my-repo --set-to 0
+git-timewarp ./my-repo --rand-between 0..23
+git-timewarp ./my-repo --shift-hours-up 3
 ```
+
+## Why?
+
+This tool will provide a quick way to obscure specific commit timestamps across a Git repo, while retaining the (more useful) overall commit chronology and date information.
+
+This would allow:
+
+* Reducing digital fingerprint when anonymity is required
+* Screwing with nosy coworkers by making all your commits late at night
+
 
 ## How to Run
 
