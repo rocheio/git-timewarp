@@ -1,5 +1,6 @@
 """Tests for the gittimewarp program."""
 
+from datetime import datetime
 import shutil
 import os
 import tempfile
@@ -67,3 +68,22 @@ class TestAlterCommitTime(TempdirTestCase):
         new_commit = gittimewarp.all_commits(self.repo)[0]
         confirmation = gittimewarp.get_commit_date(self.repo, new_commit)
         self.assertIn('00:00:00', confirmation)
+
+
+class TestWarpRepoTime(TempdirTestCase):
+    """Can warp the time of an entire Git repo."""
+
+    def setUp(self):
+        super().setUp()
+        gittimewarp.create_git_repo(self.tempdir, 'testrepo')
+        self.repo = os.path.join(self.tempdir, 'testrepo')
+        for _ in range(3):
+            gittimewarp.create_dummy_commit(self.repo)
+
+    def test_warp_repo(self):
+        gittimewarp.warp_all(self.repo)
+        for commit in gittimewarp.all_commits(self.repo):
+            timestamp = gittimewarp.get_commit_date(self.repo, commit)
+            timestamp = ' '.join(timestamp.split()[:2])
+            parsed = datetime.strptime(timestamp, '%Y-%m-%d %H:%M:%S')
+            assert 17 <= parsed.hour <= 24

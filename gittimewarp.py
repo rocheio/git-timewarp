@@ -2,6 +2,7 @@
 
 from datetime import datetime
 import os
+import random
 from subprocess import Popen, PIPE
 from typing import List
 
@@ -86,7 +87,7 @@ def get_commit_date(repo: str, commit: str) -> str:
 def set_commit_date(repo: str, commit: str, new_date: str):
     """Convert the auther and commit dates of a commit in a repo."""
     command = [
-        'filter-branch', '--env-filter',
+        'filter-branch', '-f', '--env-filter',
         f"""
         if [ $GIT_COMMIT = {commit} ];
         then
@@ -110,6 +111,17 @@ def altered_commit_datetime(commit_date: str, hour=0, minute=0, second=0) -> str
     return parsed.strftime('%a, %d %b %Y %H:%M:%S') + ' ' + timezone
 
 
+def warp_all(repo: str, start: int = 17, end: int = 23):
+    for commit in all_commits(repo):
+        current_date = get_commit_date(repo, commit)
+        hour = random.randint(start, end)
+        minute = random.randint(0, 59)
+        second = random.randint(0, 59)
+        altered = altered_commit_datetime(current_date, hour=hour,
+                                          minute=minute, second=second)
+        set_commit_date(repo, commit, altered)
+
+
 @click.command()
 @click.argument('repo')
 @click.option('--start', default=17, help='Hour to start')
@@ -117,6 +129,7 @@ def altered_commit_datetime(commit_date: str, hour=0, minute=0, second=0) -> str
 def warp(repo: str, start: int, end: int):
     """Warp the time of all commits in a git repo."""
     click.echo(f'Warping... {repo} from {start} to {end}!')
+    warp_all(repo, start, end)
 
 
 if __name__ == '__main__':
