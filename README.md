@@ -6,9 +6,9 @@ A command-line tool to modify commit timestamps in bulk.
 
 ```
 git-timewarp --help
-git-timewarp ./my-repo --set-to 0
-git-timewarp ./my-repo --rand-between 0..23
-git-timewarp ./my-repo --shift-hours-up 3
+git-timewarp randomize ./my-repo --earliest 0 --latest 23
+git-timewarp set ./my-repo 0
+git-timewarp warp ./my-repo --shift-hours-up 3
 ```
 
 ## Why?

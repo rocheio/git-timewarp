@@ -81,10 +81,21 @@ class TestWarpRepoTime(TempdirTestCase):
             gittimewarp.create_dummy_commit(self.repo)
 
     def test_randomize_repo_times(self):
-        """Can randomize times between hour-based boundaries"""
+        """Can randomize times between hour-based boundaries."""
         gittimewarp.randomize_repo_times(self.repo, start=17, end=23)
         for commit in gittimewarp.all_commits(self.repo):
             timestamp = gittimewarp.get_commit_date(self.repo, commit)
             timestamp = ' '.join(timestamp.split()[:2])
             parsed = datetime.strptime(timestamp, '%Y-%m-%d %H:%M:%S')
             assert 17 <= parsed.hour <= 24
+
+    def test_set_repo_times(self):
+        """Can set commits to a specific time."""
+        gittimewarp.set_repo_times(self.repo, hour=0, minute=1, second=2)
+        for commit in gittimewarp.all_commits(self.repo):
+            timestamp = gittimewarp.get_commit_date(self.repo, commit)
+            timestamp = ' '.join(timestamp.split()[:2])
+            parsed = datetime.strptime(timestamp, '%Y-%m-%d %H:%M:%S')
+            assert parsed.hour == 0
+            assert parsed.minute == 1
+            assert parsed.second == 2

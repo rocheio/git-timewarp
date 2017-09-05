@@ -9,6 +9,6 @@ setup(
     ],
     entry_points='''
         [console_scripts]
-        git-timewarp=gittimewarp:warp
+        git-timewarp=gittimewarp:cli
     ''',
 )

@@ -133,7 +133,42 @@ def randomize_repo_times(repo: str, start=0, end=23):
         set_commit_date(repo, commit, altered)
 
 
-@click.command()
+def set_repo_times(repo: str, hour=0, minute=0, second=0):
+    """Randomize all commit times in a repo between hour boundaries."""
+    if not 0 <= hour <= 23 or not isinstance(hour, int):
+        raise InvalidTimeFormat('hour must be an integer between 0 and 23')
+
+    if not 0 <= minute <= 59 or not isinstance(minute, int):
+        raise InvalidTimeFormat('minute must be an integer between 0 and 59')
+
+    if not 0 <= second <= 59 or not isinstance(second, int):
+        raise InvalidTimeFormat('second must be an integer between 0 and 59')
+
+    for commit in all_commits(repo):
+        current_date = get_commit_date(repo, commit)
+        altered = altered_commit_datetime(current_date, hour=hour,
+                                          minute=minute, second=second)
+        set_commit_date(repo, commit, altered)
+
+
+@click.group()
+def cli():
+    """Modify the timestamp of every commit in a Git repo."""
+    pass
+
+
+@cli.command()
+@click.argument('repo')
+@click.option('--earliest', default=0, help='Earliest hour for altered commits.')
+@click.option('--latest', default=23, help='Latest hour for altered commits.')
+def randomize(repo: str, earliest: int, latest: int):
+    """Randomize the time of all commits."""
+    click.echo(f'Randomizing {repo} commit times '
+               f'from {earliest} to {latest}')
+    randomize_repo_times(repo, earliest, latest)
+
+
+@cli.command()
 @click.argument('repo')
 @click.option('--start', default=17, help='Hour to start')
 @click.option('--end', default=24, help='Hour to end')
@@ -141,7 +176,3 @@ def warp(repo: str, start: int, end: int):
     """Warp the time of all commits in a git repo."""
     click.echo(f'Warping... {repo} from {start} to {end}!')
     randomize_repo_times(repo, start, end)
-
-
-if __name__ == '__main__':
-    warp()
