@@ -53,7 +53,7 @@ class TestAlterCommitTime(TempdirTestCase):
     def test_altered_datetime(self):
         """Can get new datetime (midnight) from a current Git commit."""
         original = gittimewarp.get_commit_date(self.repo, gittimewarp.all_commits(self.repo)[0])
-        newdate = gittimewarp.altered_commit_datetime(original)
+        newdate = gittimewarp.altered_commit_date(original)
         self.assertNotIn('00:00:00', original)
         self.assertIn('00:00:00', newdate)
 
@@ -62,7 +62,7 @@ class TestAlterCommitTime(TempdirTestCase):
         commit = gittimewarp.all_commits(self.repo)[0]
         original = gittimewarp.get_commit_date(self.repo, commit)
 
-        newdate = gittimewarp.altered_commit_datetime(original)
+        newdate = gittimewarp.altered_commit_date(original)
         gittimewarp.set_commit_date(self.repo, commit, newdate)
 
         new_commit = gittimewarp.all_commits(self.repo)[0]

@@ -104,7 +104,7 @@ def set_commit_date(repo: str, commit: str, new_date: str):
     assert result.strip().endswith('was rewritten')
 
 
-def altered_commit_datetime(commit_date: str, hour=0, minute=0, second=0) -> str:
+def altered_commit_date(commit_date: str, hour=0, minute=0, second=0) -> str:
     """Return string for adjusted commit datetime for use with alter command.
     commit_date argument has format from  `git show --format=%ci`.
     String returned has format for `git filter-branch export`.
@@ -128,8 +128,8 @@ def randomize_repo_times(repo: str, start=0, end=23):
         hour = random.randint(start, end)
         minute = random.randint(0, 59)
         second = random.randint(0, 59)
-        altered = altered_commit_datetime(current_date, hour=hour,
-                                          minute=minute, second=second)
+        altered = altered_commit_date(current_date, hour=hour,
+                                      minute=minute, second=second)
         set_commit_date(repo, commit, altered)
 
 
@@ -146,8 +146,8 @@ def set_repo_times(repo: str, hour=0, minute=0, second=0):
 
     for commit in all_commits(repo):
         current_date = get_commit_date(repo, commit)
-        altered = altered_commit_datetime(current_date, hour=hour,
-                                          minute=minute, second=second)
+        altered = altered_commit_date(current_date, hour=hour,
+                                      minute=minute, second=second)
         set_commit_date(repo, commit, altered)
 
 
@@ -162,7 +162,7 @@ def cli():
 @click.option('--earliest', default=0, help='Earliest hour for altered commits.')
 @click.option('--latest', default=23, help='Latest hour for altered commits.')
 def randomize(repo: str, earliest: int, latest: int):
-    """Randomize the time of all commits."""
+    """Randomize time of all commits."""
     click.echo(f'Randomizing {repo} commit times '
                f'from {earliest} to {latest}')
     randomize_repo_times(repo, earliest, latest)
@@ -170,9 +170,8 @@ def randomize(repo: str, earliest: int, latest: int):
 
 @cli.command()
 @click.argument('repo')
-@click.option('--start', default=17, help='Hour to start')
-@click.option('--end', default=24, help='Hour to end')
-def warp(repo: str, start: int, end: int):
-    """Warp the time of all commits in a git repo."""
-    click.echo(f'Warping... {repo} from {start} to {end}!')
-    randomize_repo_times(repo, start, end)
+@click.option('--hour', default=0, help='New hour for altered commits.')
+def standardize(repo: str, hour: int):
+    """Set time of all commits to the same value."""
+    click.echo(f'Setting all {repo} commit times to {hour}')
+    set_repo_times(hour)
