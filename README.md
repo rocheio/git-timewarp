@@ -8,7 +8,7 @@ A command-line tool to modify commit timestamps in bulk.
 git-timewarp --help
 git-timewarp standardize ./my-repo
 git-timewarp randomize ./my-repo --earliest 0 --latest 23
-git-timewarp hoursonly ./my-repo
+git-timewarp strip ./my-repo --minutes --seconds
 git-timewarp shiftup ./my-repo --hours 3
 ```
 

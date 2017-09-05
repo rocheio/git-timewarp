@@ -104,7 +104,8 @@ def set_commit_date(repo: str, commit: str, new_date: str):
     assert result.strip().endswith('was rewritten')
 
 
-def altered_commit_date(commit_date: str, hour=0, minute=0, second=0) -> str:
+def altered_commit_date(commit_date: str, hour: int = None,
+                        minute: int = None, second: int = None) -> str:
     """Return string for adjusted commit datetime for use with alter command.
     commit_date argument has format from  `git show --format=%ci`.
     String returned has format for `git filter-branch export`.
@@ -175,3 +176,28 @@ def standardize(repo: str, hour: int):
     """Set time of all commits to the same value."""
     click.echo(f'Setting all {repo} commit times to {hour}')
     set_repo_times(hour)
+
+
+@cli.command()
+@click.argument('repo')
+@click.option('--hours', default=False, help='Replace hour values?')
+@click.option('--minutes', default=False, help='Replace minute values?')
+@click.option('--seconds', default=False, help='Replace second values?')
+def strip(repo: str, hours: bool, minutes: bool, seconds: bool):
+    """Set time unit(s) to 0 for all commits."""
+    if not any(hours, minutes, seconds):
+        click.echo(f'No time units (hours, minutes, seconds) specified for removal')
+        return
+
+    click.echo('Stripping selected time unit(s) from git commits')
+
+    # Determine which time fields to replace with zero
+    hour = 0 if hours else None
+    minute = 0 if minutes else None
+    second = 0 if seconds else None
+
+    for commit in all_commits(repo):
+        current_date = get_commit_date(repo, commit)
+        altered = altered_commit_date(current_date, hour=hour,
+                                      minute=minute, second=second)
+        set_commit_date(repo, commit, altered)
