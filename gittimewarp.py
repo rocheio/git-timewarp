@@ -74,7 +74,7 @@ def create_dummy_commit(repo: str):
 
 
 def all_commits(repo: str) -> List[str]:
-    """Return list of all commit hashes in chronological order.
+    """Return list of all commit hashes in REVERSE chronological order.
     Raise a GitError if this fails.
     """
     results = git_command(['log', '--pretty=format:%H'], folder=repo)
@@ -174,8 +174,12 @@ def randomize(repo: str, earliest: int, latest: int):
 @click.option('--hour', default=0, help='New hour for altered commits.')
 def standardize(repo: str, hour: int):
     """Set time of all commits to the same value."""
-    click.echo(f'Setting all {repo} commit times to {hour}')
-    set_repo_times(hour)
+    repo = os.path.abspath(repo)
+    newtime = datetime.strptime(str(hour), '%H').time()
+    count = number_git_commits(repo)
+    click.echo(f'Setting commit times in "{repo}" to '
+               f'{newtime} for {count} commits')
+    set_repo_times(repo, hour)
 
 
 @cli.command()
