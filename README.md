@@ -6,10 +6,9 @@ A command-line tool to modify commit timestamps in bulk.
 
 ```bash
 git-timewarp --help
-git-timewarp standardize $REPO
 git-timewarp randomize $REPO --earliest 0 --latest 23
+git-timewarp standardize $REPO
 git-timewarp strip $REPO --minutes --seconds
-git-timewarp shiftup $REPO --hours 3
 ```
 
 ## Why?
@@ -21,7 +20,7 @@ This allows a developer to:
 * Reduce their digital fingerprint of Git contributions when anonymity is desired
 * Prank nosy coworkers by making all their commits late at night
 
-## How to Run
+## How to Run (Development)
 
 First time only, set up your environment:
 
@@ -54,11 +53,10 @@ git-timewarp --help
 
 ## TODO
 
-* Add messaging / echos to the `strip` commands
-* Finish the `shiftup` command
 * Allow all commands to filter by author or email
 * Allow all commands to filter for a single commit
 * Allow all commands to filter by a range of commits
 * Allow all commands to default to `.` if no repo specified
+* Complete README doc with a sentence or two for each command
 * 100% in pylint and mypy
 * 90% in unit test coverage

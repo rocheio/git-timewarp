@@ -120,8 +120,15 @@ def altered_commit_date(commit_date: str, hour: int = None,
     parsed = datetime.datetime.strptime(
         date + ' ' + time, '%Y-%m-%d %H:%M:%S'
     )
-    parsed = parsed.replace(hour=hour, minute=minute, second=second)
-    return parsed.strftime('%a, %d %b %Y %H:%M:%S') + ' ' + timezone
+    kwargs = {}
+    if hour is not None:
+        kwargs['hour'] = hour
+    if minute is not None:
+        kwargs['minute'] = minute
+    if second is not None:
+        kwargs['second'] = second
+    parsed = parsed.replace(**kwargs).strftime('%a, %d %b %Y %H:%M:%S')
+    return parsed + ' ' + timezone
 
 
 def randomize_repo_times(repo: str, start=0, end=23, echo=True):
@@ -229,16 +236,18 @@ def standardize(repo: str, hour: int):
 
 @cli.command()
 @click.argument('repo')
-@click.option('--hours', default=False, help='Replace hour values?')
-@click.option('--minutes', default=False, help='Replace minute values?')
-@click.option('--seconds', default=False, help='Replace second values?')
+@click.option('--hours/--no-hours', default=False, help='Replace hour values?')
+@click.option('--minutes/--no-minutes', default=False, help='Replace minute values?')
+@click.option('--seconds/--no-seconds', default=False, help='Replace second values?')
 def strip(repo: str, hours: bool, minutes: bool, seconds: bool):
     """Set time unit(s) to 0 for all commits."""
     if not any([hours, minutes, seconds]):
         click.echo(f'No time units (hours, minutes, seconds) specified for removal')
         return
 
-    click.echo('Stripping selected time unit(s) from git commits')
+    message = f'Strip selected time unit(s) from git commits?'
+    if not click.confirm(message):
+        return
 
     # Determine which time fields to replace with zero
     hour = 0 if hours else None
@@ -249,4 +258,7 @@ def strip(repo: str, hours: bool, minutes: bool, seconds: bool):
         current_date = get_commit_date(repo, commit)
         altered = altered_commit_date(current_date, hour=hour,
                                       minute=minute, second=second)
+        click.echo(f'Stripping commit {commit[:10]} time data')
         set_commit_date(repo, commit, altered)
+
+    click.echo('Finished stripping selected time unit(s) from commits.')
