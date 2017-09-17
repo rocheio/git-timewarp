@@ -1,10 +1,10 @@
 """Command-line tool to modify Git repo timestamps in bulk."""
 
-from datetime import datetime
+import datetime
 import os
 import random
 from subprocess import Popen, PIPE
-from typing import List
+from typing import Dict, List
 
 import click
 
@@ -117,7 +117,9 @@ def altered_commit_date(commit_date: str, hour: int = None,
     String returned has format for `git filter-branch export`.
     """
     date, time, timezone = commit_date.split()
-    parsed = datetime.strptime(date + ' ' + time, '%Y-%m-%d %H:%M:%S')
+    parsed = datetime.datetime.strptime(
+        date + ' ' + time, '%Y-%m-%d %H:%M:%S'
+    )
     parsed = parsed.replace(hour=hour, minute=minute, second=second)
     return parsed.strftime('%a, %d %b %Y %H:%M:%S') + ' ' + timezone
 
@@ -131,16 +133,11 @@ def randomize_repo_times(repo: str, start=0, end=23, echo=True):
         raise InvalidTimeFormat('end must be an integer between 0 and 23')
 
     # Get chrono sorted list of commits for each date of activity
-    dates_to_commits = {}
-    for commit in all_commits(repo):
-        date, time, _ = get_commit_date(repo, commit).split()
-        dateobj = datetime.strptime(date + ' ' + time, '%Y-%m-%d %H:%M:%S')
-        # Add the commit to a list of commits for that date
-        dates_to_commits.setdefault(dateobj.date(), []).append(commit)
+    dates_to_commits = commits_by_date(repo)
 
-    for date, commits in dates_to_commits.items():
+    for commits in dates_to_commits.values():
         # Get list of chrono sorted random dates for each
-        randoms = []
+        randoms = []  # type: List[str]
         for commit in commits:
             current_date = get_commit_date(repo, commit)
             hour = random.randint(start, end)
@@ -150,6 +147,19 @@ def randomize_repo_times(repo: str, start=0, end=23, echo=True):
             if echo:
                 click.echo(f'Changing commit {commit[:10]} date to {newdate}')
             set_commit_date(repo, commit, newdate)
+
+
+def commits_by_date(repo: str) -> Dict[datetime.date, List[str]]:
+    """Get chrono sorted list of commits for each date of activity."""
+    dates_to_commits = {}  # type: Dict[datetime.date, List[str]]
+    for commit in all_commits(repo):
+        date, time, _ = get_commit_date(repo, commit).split()
+        dateobj = datetime.datetime.strptime(
+            date + ' ' + time, '%Y-%m-%d %H:%M:%S'
+        )
+        # Add the commit to a list of commits for that date
+        dates_to_commits.setdefault(dateobj.date(), []).append(commit)
+    return dates_to_commits
 
 
 def randomize_datetime(current_date: str, hour: int) -> str:
@@ -208,7 +218,7 @@ def randomize(repo: str, earliest: int, latest: int):
 def standardize(repo: str, hour: int):
     """Set time of all commits to the same value."""
     repo = os.path.abspath(repo)
-    newtime = datetime.strptime(str(hour), '%H').time()
+    newtime = datetime.datetime.strptime(str(hour), '%H').time()
     count = number_git_commits(repo)
     message = f'Set all {count} commit times in "{repo}" to {newtime}?'
     if not click.confirm(message):
@@ -224,7 +234,7 @@ def standardize(repo: str, hour: int):
 @click.option('--seconds', default=False, help='Replace second values?')
 def strip(repo: str, hours: bool, minutes: bool, seconds: bool):
     """Set time unit(s) to 0 for all commits."""
-    if not any(hours, minutes, seconds):
+    if not any([hours, minutes, seconds]):
         click.echo(f'No time units (hours, minutes, seconds) specified for removal')
         return
 
