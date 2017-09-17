@@ -54,6 +54,7 @@ git-timewarp --help
 
 ## TODO
 
+* Add messaging / echos to the `strip` commands
 * Finish the `shiftup` command
 * Allow all commands to filter by author or email
 * Allow all commands to filter for a single commit

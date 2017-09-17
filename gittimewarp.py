@@ -128,17 +128,30 @@ def randomize_repo_times(repo: str, start=0, end=23, echo=True):
     if not 0 <= end <= 23 or not isinstance(end, int):
         raise InvalidTimeFormat('end must be an integer between 0 and 23')
 
+    # Get chrono sorted list of commits for each date of activity
+    dates_to_commits = {}
     for commit in all_commits(repo):
-        current_date = get_commit_date(repo, commit)
-        hour = random.randint(start, end)
-        minute = random.randint(0, 59)
-        second = random.randint(0, 59)
-        altered = altered_commit_date(current_date, hour=hour,
-                                      minute=minute, second=second)
-        if echo:
-            click.echo(f'Changing commit {commit[:10]} date from '
-                       f'{current_date} to {altered}')
-        set_commit_date(repo, commit, altered)
+        date, time, _ = get_commit_date(repo, commit).split()
+        dateobj = datetime.strptime(date + ' ' + time, '%Y-%m-%d %H:%M:%S')
+        # Add the commit to a list of commits for that date
+        dates_to_commits.setdefault(dateobj.date(), []).append(commit)
+
+    for date, commits in dates_to_commits.items():
+        # Get list of chrono sorted random dates for each
+        randoms = []
+        for commit in commits:
+            current_date = get_commit_date(repo, commit)
+            hour = random.randint(start, end)
+            minute = random.randint(0, 59)
+            second = random.randint(0, 59)
+            altered = altered_commit_date(current_date, hour=hour,
+                                          minute=minute, second=second)
+            randoms += [altered]
+
+        for commit, newdate in zip(commits, reversed(sorted(randoms))):
+            if echo:
+                click.echo(f'Changing commit {commit[:10]} date to {newdate}')
+            set_commit_date(repo, commit, newdate)
 
 
 def set_repo_times(repo: str, hour=0, minute=0, second=0, echo=True):
