@@ -10,10 +10,12 @@ import click
 
 
 class GitError(Exception):
+    """Error raised from a Git subprocess."""
     pass
 
 
 class InvalidTimeFormat(Exception):
+    """Error raised when CLI user inputs invalid time value."""
     pass
 
 
@@ -142,16 +144,21 @@ def randomize_repo_times(repo: str, start=0, end=23, echo=True):
         for commit in commits:
             current_date = get_commit_date(repo, commit)
             hour = random.randint(start, end)
-            minute = random.randint(0, 59)
-            second = random.randint(0, 59)
-            altered = altered_commit_date(current_date, hour=hour,
-                                          minute=minute, second=second)
-            randoms += [altered]
+            randoms += [randomize_datetime(current_date, hour)]
 
         for commit, newdate in zip(commits, reversed(sorted(randoms))):
             if echo:
                 click.echo(f'Changing commit {commit[:10]} date to {newdate}')
             set_commit_date(repo, commit, newdate)
+
+
+def randomize_datetime(current_date: str, hour: int) -> str:
+    """Return a commit date with a random time within given hour."""
+    minute = random.randint(0, 59)
+    second = random.randint(0, 59)
+    altered = altered_commit_date(current_date, hour=hour,
+                                  minute=minute, second=second)
+    return altered
 
 
 def set_repo_times(repo: str, hour=0, minute=0, second=0, echo=True):
