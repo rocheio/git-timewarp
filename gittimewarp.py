@@ -26,10 +26,10 @@ def git_command(parts: list, folder: str):
     process = Popen(command, cwd=folder, stdout=PIPE, stderr=PIPE)
 
     result, error = process.communicate()
-    if error:
+    if error and 'WARNING' not in error.decode():
         raise GitError(error.decode())
 
-    return result.decode()
+    return result.decode().strip()
 
 
 def create_git_repo(folder: str, name: str):
@@ -78,14 +78,14 @@ def all_commits(repo: str) -> List[str]:
     Raise a GitError if this fails.
     """
     results = git_command(['log', '--pretty=format:%H'], folder=repo)
-    commits = results.strip().split('\n')
+    commits = results.split('\n')
     return commits
 
 
 def get_commit_date(repo: str, commit: str) -> str:
     """Return string format (for now) of a git commit timestamp."""
     result = git_command(['show', '-s', '--format=%ci', commit], folder=repo)
-    return result.strip()
+    return result
 
 
 def set_commit_date(repo: str, commit: str, new_date: str):
@@ -101,7 +101,11 @@ def set_commit_date(repo: str, commit: str, new_date: str):
         """.strip()
     ]
     result = git_command(command, repo)
-    assert result.strip().endswith('was rewritten')
+    if result.endswith('was rewritten'):
+        return
+    if result.endswith('remaining 0 predicted)'):
+        return
+    raise GitError(f'Unexpected git result: {result}')
 
 
 def altered_commit_date(commit_date: str, hour: int = None,
@@ -134,7 +138,7 @@ def randomize_repo_times(repo: str, start=0, end=23):
         set_commit_date(repo, commit, altered)
 
 
-def set_repo_times(repo: str, hour=0, minute=0, second=0):
+def set_repo_times(repo: str, hour=0, minute=0, second=0, echo=True):
     """Randomize all commit times in a repo between hour boundaries."""
     if not 0 <= hour <= 23 or not isinstance(hour, int):
         raise InvalidTimeFormat('hour must be an integer between 0 and 23')
@@ -149,6 +153,9 @@ def set_repo_times(repo: str, hour=0, minute=0, second=0):
         current_date = get_commit_date(repo, commit)
         altered = altered_commit_date(current_date, hour=hour,
                                       minute=minute, second=second)
+        if echo:
+            click.echo(f'Changing commit {commit[:10]} date from '
+                       f'{current_date} to {altered}')
         set_commit_date(repo, commit, altered)
 
 
@@ -177,9 +184,11 @@ def standardize(repo: str, hour: int):
     repo = os.path.abspath(repo)
     newtime = datetime.strptime(str(hour), '%H').time()
     count = number_git_commits(repo)
-    click.echo(f'Setting commit times in "{repo}" to '
-               f'{newtime} for {count} commits')
+    message = f'Set all {count} commit times in "{repo}" to {newtime}?'
+    if not click.confirm(message):
+        return
     set_repo_times(repo, hour)
+    click.echo('Finished standardizing commit times.')
 
 
 @cli.command()

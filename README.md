@@ -54,7 +54,6 @@ git-timewarp --help
 
 ## TODO
 
-* Add `y/n` prompt with summary before running from CLI
 * Finish the `shiftup` command
 * Allow all commands to filter by author or email
 * Allow all commands to filter for a single commit

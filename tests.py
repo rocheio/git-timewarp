@@ -91,7 +91,7 @@ class TestWarpRepoTime(TempdirTestCase):
 
     def test_set_repo_times(self):
         """Can set commits to a specific time."""
-        gittimewarp.set_repo_times(self.repo, hour=0, minute=1, second=2)
+        gittimewarp.set_repo_times(self.repo, hour=0, minute=1, second=2, echo=False)
         for commit in gittimewarp.all_commits(self.repo):
             timestamp = gittimewarp.get_commit_date(self.repo, commit)
             timestamp = ' '.join(timestamp.split()[:2])
