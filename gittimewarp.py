@@ -120,7 +120,7 @@ def altered_commit_date(commit_date: str, hour: int = None,
     return parsed.strftime('%a, %d %b %Y %H:%M:%S') + ' ' + timezone
 
 
-def randomize_repo_times(repo: str, start=0, end=23):
+def randomize_repo_times(repo: str, start=0, end=23, echo=True):
     """Randomize all commit times in a repo between hour boundaries."""
     if not 0 <= start <= 23 or not isinstance(start, int):
         raise InvalidTimeFormat('start must be an integer between 0 and 23')
@@ -135,6 +135,9 @@ def randomize_repo_times(repo: str, start=0, end=23):
         second = random.randint(0, 59)
         altered = altered_commit_date(current_date, hour=hour,
                                       minute=minute, second=second)
+        if echo:
+            click.echo(f'Changing commit {commit[:10]} date from '
+                       f'{current_date} to {altered}')
         set_commit_date(repo, commit, altered)
 
 
@@ -171,9 +174,12 @@ def cli():
 @click.option('--latest', default=23, help='Latest hour for altered commits.')
 def randomize(repo: str, earliest: int, latest: int):
     """Randomize time of all commits."""
-    click.echo(f'Randomizing {repo} commit times '
-               f'from {earliest} to {latest}')
+    repo = os.path.abspath(repo)
+    message = f'Randomize all commit times in "{repo}" from {earliest} to {latest}?'
+    if not click.confirm(message):
+        return
     randomize_repo_times(repo, earliest, latest)
+    click.echo('Finished randomizing commit times.')
 
 
 @cli.command()

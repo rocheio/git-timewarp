@@ -82,7 +82,7 @@ class TestWarpRepoTime(TempdirTestCase):
 
     def test_randomize_repo_times(self):
         """Can randomize times between hour-based boundaries."""
-        gittimewarp.randomize_repo_times(self.repo, start=17, end=23)
+        gittimewarp.randomize_repo_times(self.repo, start=17, end=23, echo=False)
         for commit in gittimewarp.all_commits(self.repo):
             timestamp = gittimewarp.get_commit_date(self.repo, commit)
             timestamp = ' '.join(timestamp.split()[:2])
